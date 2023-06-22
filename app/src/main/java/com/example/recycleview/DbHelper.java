@@ -31,16 +31,14 @@ public class DbHelper extends SQLiteOpenHelper {
     private static final String COLUMN_SABKI = "sabki";
     private static final String COLUMN_MANZIL = "manzil";
 
-
     public DbHelper(Context context) {
         super(context, DATABASE_NAME, null, 1);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-
         String sql = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME + "("
-                + COLUMN_ID + " INTEGER,"
+                + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + COLUMN_NAME + " TEXT,"
                 + COLUMN_AGE + " TEXT,"
                 + COLUMN_CLAS + " TEXT"
@@ -48,7 +46,7 @@ public class DbHelper extends SQLiteOpenHelper {
         db.execSQL(sql);
 
         String sql2 = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME_RECORDS + "("
-                + COLUMN_ID + " INTEGER,"
+                + COLUMN_IDD + " INTEGER,"
                 + COLUMN_DATE + " TEXT,"
                 + COLUMN_SURAT + " INTEGER,"
                 + COLUMN_START + " INTEGER,"
@@ -58,17 +56,13 @@ public class DbHelper extends SQLiteOpenHelper {
                 + "FOREIGN KEY(" + COLUMN_IDD + ") REFERENCES " + TABLE_NAME + "(" + COLUMN_ID + ")"
                 + ")";
         db.execSQL(sql2);
-
-
     }
 
     @Override
-    public void onUpgrade(SQLiteDatabase db, int i, int i1) {
-
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         String sql = "DROP TABLE IF EXISTS " + TABLE_NAME;
         db.execSQL(sql);
         onCreate(db);
-
     }
 
     public void insertStudent(Student student) {
@@ -83,43 +77,31 @@ public class DbHelper extends SQLiteOpenHelper {
         db.close();
     }
 
-
-    public int getLastID()
-    {
-        SQLiteDatabase database=this.getReadableDatabase();
-        Cursor cursor = database.rawQuery("SELECT MAX("+COLUMN_ID+") FROM "+TABLE_NAME, null);
-        int maxid = (cursor.moveToFirst() ? cursor.getInt(0) : 0);
-        return maxid;
+    public int getLastID() {
+        SQLiteDatabase database = this.getReadableDatabase();
+        Cursor cursor = database.rawQuery("SELECT MAX(" + COLUMN_ID + ") FROM " + TABLE_NAME, null);
+        int maxId = 0;
+        if (cursor.moveToFirst()) {
+            maxId = cursor.getInt(0);
+        }
+        cursor.close();
+        database.close();
+        return maxId;
     }
-
 
     public List<Student> selectAllStudents() {
         List<Student> students = new ArrayList<>();
 
-        String sql = "SELECT * FROM " + TABLE_NAME;
-
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor cursor = db.rawQuery(sql, null);
-
-        /*
-        * if (cursorCourses.moveToFirst()) {
-            do {
-
-                studentArrayList.add(new StudentModel(cursorCourses.getString(1),
-                      cursorCourses.getInt(2),
-                        cursorCourses.getInt(3) == 1 ? true : false));
-            } while (cursorCourses.moveToNext());
-
-        }
-        * */
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_NAME, null);
 
         if (cursor.moveToFirst()) {
             do {
-                @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(COLUMN_ID));
-                @SuppressLint("Range") String name = cursor.getString(cursor.getColumnIndex(COLUMN_NAME));
-                @SuppressLint("Range")  String age = cursor.getString(cursor.getColumnIndex(COLUMN_AGE));
-                @SuppressLint("Range") String clas = cursor.getString(cursor.getColumnIndex(COLUMN_CLAS));
-                students.add(new Student(id ,name, age, clas));
+                int id = cursor.getInt(cursor.getColumnIndex(COLUMN_ID));
+                String name = cursor.getString(cursor.getColumnIndex(COLUMN_NAME));
+                String age = cursor.getString(cursor.getColumnIndex(COLUMN_AGE));
+                String clas = cursor.getString(cursor.getColumnIndex(COLUMN_CLAS));
+                students.add(new Student(id, name, age, clas));
             } while (cursor.moveToNext());
         }
 
@@ -128,7 +110,6 @@ public class DbHelper extends SQLiteOpenHelper {
 
         return students;
     }
-
 
     public void insertRecords(Records records) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -146,28 +127,22 @@ public class DbHelper extends SQLiteOpenHelper {
         db.close();
     }
 
-
-
     public List<Records> selectAllRecords() {
         List<Records> records = new ArrayList<>();
 
-        String sql = "SELECT * FROM " + TABLE_NAME_RECORDS;
-
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor cursor = db.rawQuery(sql, null);
-
-
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_NAME_RECORDS, null);
 
         if (cursor.moveToFirst()) {
             do {
-                @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(COLUMN_IDD));
-                @SuppressLint("Range") String date = cursor.getString(cursor.getColumnIndex(COLUMN_DATE));
-                @SuppressLint("Range") int surat = cursor.getInt(cursor.getColumnIndex(COLUMN_SURAT));
-                @SuppressLint("Range") int start = cursor.getInt(cursor.getColumnIndex(COLUMN_START));
-                @SuppressLint("Range") int end = cursor.getInt(cursor.getColumnIndex(COLUMN_END));
-                @SuppressLint("Range") int sabki = cursor.getInt(cursor.getColumnIndex(COLUMN_SABKI));
-                @SuppressLint("Range") int manzil = cursor.getInt(cursor.getColumnIndex(COLUMN_MANZIL));
-                records.add(new Records(id , date , surat , start , end , sabki , manzil));
+                int id = cursor.getInt(cursor.getColumnIndex(COLUMN_IDD));
+                String date = cursor.getString(cursor.getColumnIndex(COLUMN_DATE));
+                int surat = cursor.getInt(cursor.getColumnIndex(COLUMN_SURAT));
+                int start = cursor.getInt(cursor.getColumnIndex(COLUMN_START));
+                int end = cursor.getInt(cursor.getColumnIndex(COLUMN_END));
+                int sabki = cursor.getInt(cursor.getColumnIndex(COLUMN_SABKI));
+                int manzil = cursor.getInt(cursor.getColumnIndex(COLUMN_MANZIL));
+                records.add(new Records(id, date, surat, start, end, sabki, manzil));
             } while (cursor.moveToNext());
         }
 
@@ -177,8 +152,30 @@ public class DbHelper extends SQLiteOpenHelper {
         return records;
     }
 
+    public List<Student> searchStudents(String searchQuery) {
+        List<Student> studentList = new ArrayList<>();
 
+        SQLiteDatabase db = this.getReadableDatabase();
 
+        String[] columns = {COLUMN_ID, COLUMN_NAME, COLUMN_AGE, COLUMN_CLAS};
+        String selection = COLUMN_NAME + " LIKE ?";
+        String[] selectionArgs = {"%" + searchQuery + "%"};
 
+        Cursor cursor = db.query(TABLE_NAME, columns, selection, selectionArgs, null, null, null);
 
+        if (cursor.moveToFirst()) {
+            do {
+                int id = cursor.getInt(cursor.getColumnIndex(COLUMN_ID));
+                String name = cursor.getString(cursor.getColumnIndex(COLUMN_NAME));
+                String age = cursor.getString(cursor.getColumnIndex(COLUMN_AGE));
+                String clas = cursor.getString(cursor.getColumnIndex(COLUMN_CLAS));
+                studentList.add(new Student(id, name, age, clas));
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        db.close();
+
+        return studentList;
+    }
 }

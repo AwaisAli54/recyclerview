@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="114dp"
     layout_height="70dp"
+    android:background="@mipmap/baack_round"
     xmlns:android="http://schemas.android.com/apk/res/android" >
 
     <androidx.constraintlayout.widget.ConstraintLayout
